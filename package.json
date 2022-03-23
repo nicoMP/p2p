@@ -1,0 +1,24 @@
+{
+  "name": "p2p",
+  "version": "1.0.0",
+  "description": "A simple peer to peer network developef for SE3314",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/nicoMP/p2p.git"
+  },
+  "keywords": [
+    "p2p",
+    "kamdemlia",
+    "DHT"
+  ],
+  "author": "Nicolas Mateus",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nicoMP/p2p/issues"
+  },
+  "homepage": "https://github.com/nicoMP/p2p#readme"
+}
