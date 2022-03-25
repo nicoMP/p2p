@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/nicoMP/p2p/issues"
   },
-  "homepage": "https://github.com/nicoMP/p2p#readme"
+  "homepage": "https://github.com/nicoMP/p2p#readme",
+  "dependencies": {
+    "window": "^4.2.7"
+  }
 }

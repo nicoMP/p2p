@@ -1,5 +1,5 @@
-var ITPpacket = require("./ITPResponse"),
-  singleton = require("./Singleton");
+var ITPpacket = require("./KADPTP"),
+singleton = require("./Singleton");
 const fs = require("fs");
 
 var nickNames = {},
