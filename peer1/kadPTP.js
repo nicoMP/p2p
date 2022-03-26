@@ -1,48 +1,54 @@
 //size of the response packet header:
-var HEADER_SIZE = 12;
+var HEADER_SIZE = 4;
 
 //Fields that compose the header
-var version, responseType, sequenceNumber, timeStamp;
+var version, responseType, peerNumber, timeStamp;
 
 module.exports = {
-  responseHeader: "", //Bitstream of the ITP header
-  payloadSize: 0, //size of the ITP payload
-  payload: "", //Bitstream of the ITP payload
+  responseHeader: "", //Bitstream of the PTP header
+  payloadSize: 0, //size of the PTP payload
+  payload: "", //Bitstream of the PTP payload
 
   init: function (
-    ver, // ITP version
+    ver, // PTP version
     resType, // response type
-    sequenceNum, // sequence number
-    currentTime, // timestamp
-    imageData, // image data
+    peerNum, // number of peers
+    senderName, // sender name
+    DHT //hash table of server
   ) {
     //fill by default packet fields:
-    version = ver;
-
+    var version = ver;
+    var byteName = stringToBytes(senderName);
+    var nameLength = byteName.length;
+    console.log(bytesToString(byteName));
+    HEADER_SIZE += Math.ceil(nameLength/2);
     //build the header bistream:
     //--------------------------
     this.responseHeader = new Buffer.alloc(HEADER_SIZE);
 
-    //fill out the header array of byte with ITP header fields
+    //fill out the header array of byte with PTP header fields
     // V
     storeBitPacket(this.responseHeader, version, 0, 4);
     // Response type
     storeBitPacket(this.responseHeader, resType, 4, 8);
-    // sequenceNumber
-    storeBitPacket(this.responseHeader, sequenceNum, 12, 16);
-    // timeStamp
-    storeBitPacket(this.responseHeader, currentTime, 32, 32);
-    // Image size in byte
-    storeBitPacket(this.responseHeader, imageData.length, 64, 32);
+    // num of peer
+    storeBitPacket(this.responseHeader, peerNum, 12, 8);
+    // length name
+    storeBitPacket(this.responseHeader, nameLength, 20,12);
+    //sender name
+    storeBitPacket(this.responseHeader, byteName, 32, nameLength*4);
 
     //fill the payload bitstream:
     //--------------------------
-    this.payload = new Buffer.alloc(imageData.length + 4);
-
-    // Image data    
-    for (j = 0; j < imageData.length; j++) {
-      this.payload[j] = imageData[j];
-    }
+    this.payload = new Buffer.alloc(peerNum*6);
+    var offset = 0;
+    if(peerNum>0){
+      DHT.forEach((element)=>{
+      storeBitPacket(this.payload, element.IP, offset, 32);
+      offset += 32;
+      storeBitPacket(this.payload, element.port, offset, 16);
+      offset += 16;
+    });}
   },
 
   //--------------------------
@@ -121,4 +127,11 @@ function setPacketBit(packet, position, value) {
   } else {
     packet[bytePosition] |= 1 << bitPosition;
   }
+}
+function bytesToString(array) {
+  var result = "";
+  for (var i = 0; i < array.length; ++i) {
+    result += String.fromCharCode(array[i]);
+  }
+  return result;
 }

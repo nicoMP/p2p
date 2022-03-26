@@ -26,7 +26,7 @@ DHTKNet.on('listening', ()=>{
 });//gives value to the global variable 
 singleton.init();
 DHTKNet.on('connection', (sock)=>{
-    clientsHandler.handleClientJoining(sock, peerID);//sends it to given module from assignment 1 to hanfdle
+    DHT = clientsHandler.handleClientJoining(sock, peerID, DHT,peerName);//sends it to given module from assignment 1 to hanfdle
 })
 
 if (pFlag != undefined){//what to do if there's a pflag
@@ -47,6 +47,9 @@ function connectTO(recAddress){
     let ip = addArray[0], port = addArray[1];
     if(validateIPaddress(ip, port)){
             sock = net.connect(port, ip);
+            sock.on('data', (data)=>{
+                console.log(data.buffer);
+            });
     }
 }
 function validateIPaddress(ipaddress,port) 
@@ -72,6 +75,7 @@ function validateIPaddress(ipaddress,port)
 }
 
 process.on('uncaughtException', err => {
-    console.error('There was an uncaught error:', err.code + '\nProgram Exited')
-    process.exit(1) //mandatory (as per the Node.js docs)
+    console.error('There was an uncaught error:', err.code + '\nProgram Exited');
+    DHTKNet.close();
+    process.exit(1); //mandatory (as per the Node.js docs)
   })

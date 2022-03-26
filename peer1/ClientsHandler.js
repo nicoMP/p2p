@@ -1,13 +1,15 @@
-var ITPpacket = require("./KADPTP"),
+var KADpacket = require("./KADPTP"),
 singleton = require("./Singleton");
 const fs = require("fs");
+const { getBytePacket } = require("./KADPTP");
 
 var nickNames = {},
   clientIP = {},
-  startTimestamp = {};
+  startTimestamp = {},
+  packet;
 
 module.exports = {
-  handleClientJoining: function (sock) {
+  handleClientJoining: function (sock, peerID, DHT, peerName) {
     assignClientName(sock, nickNames);
     const chunks = [];
     console.log(
@@ -16,76 +18,18 @@ module.exports = {
         " is connected at timestamp: " +
         startTimestamp[sock.id]
     );
-    sock.on("data", function (requestPacket) {
-      handleClientRequests(requestPacket, sock); //read client requests and respond
-    });
+    handleResponse(sock, DHT, peerName);
     sock.on("close", function () {
       handleClientLeaving(sock);
     });
   },
 };
 
-function handleClientRequests(data, sock) {
-  console.log("\nITP packet received:");
-  printPacketBit(data);
-
-  let version = parseBitPacket(data, 0, 4);
-  let requestType = parseBitPacket(data, 24, 8);
-  let requestName = {
-    0: "Query",
-    1: "Found",
-    2: "Not found",
-    3: "Busy",
-  };
-  let imageExtension = {
-    1: "BMP",
-    2: "JPEG",
-    3: "GIF",
-    4: "PNG",
-    5: "TIFF",
-    15: "RAW",
-  };
-  let timeStamp = parseBitPacket(data, 32, 32);
-  let imageType = parseBitPacket(data, 64, 4);
-  let imageTypeName = imageExtension[imageType];
-  let imageNameSize = parseBitPacket(data, 68, 28);
-  let imageName = bytesToString(data.slice(12, 13 + imageNameSize));
- 
-  console.log(
-    "\n" +
-      nickNames[sock.id] +
-      " requests:" +
-      "\n    --ITP version: " +
-      version +
-      "\n    --Timestamp: " +
-      timeStamp +
-      "\n    --Request type: " +
-      requestName[requestType] +
-      "\n    --Image file extension(s): " +
-      imageTypeName +
-      "\n    --Image file name: " +
-      imageName +
-      "\n"
-  );
-  if (version == 7) {  
-      let imageFullName = "images/" + imageName + "." + imageTypeName;
-      let imageData = fs.readFileSync(imageFullName);   
-
-    ITPpacket.init(
-      version,
-      1, // response type
-      singleton.getSequenceNumber(), // sequence number
-      singleton.getTimestamp(), // timestamp
-      imageData, // image data
-    );
-
-    sock.write(ITPpacket.getBytePacket());
-    sock.end();
-  } else {
-    console.log("The protocol version is not supported");
-    sock.end();
-  }
+function handleResponse(sock, DHT, peerName){
+  KADpacket.init(7,1,DHT.length, peerName, DHT)
+  sock.write(KADpacket.getBytePacket());//you were here you have to get a packet you can do that by using the kadptp
 }
+
 
 function handleClientLeaving(sock) {
   console.log(nickNames[sock.id] + " closed the connection");
