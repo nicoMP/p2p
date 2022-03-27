@@ -6,7 +6,6 @@ var version, responseType, peerNumber, timeStamp;
 
 module.exports = {
   responseHeader: "", //Bitstream of the PTP header
-  payloadSize: 0, //size of the PTP payload
   payload: "", //Bitstream of the PTP payload
 
   init: function (
@@ -20,7 +19,6 @@ module.exports = {
     var version = ver;
     var byteName = stringToBytes(senderName);
     var nameLength = byteName.length;
-    console.log(bytesToString(byteName));
     HEADER_SIZE += nameLength;
     //build the header bistream:
     //--------------------------
@@ -39,14 +37,18 @@ module.exports = {
     for(i = 0; i<nameLength; i++){
         this.responseHeader[i+4] = byteName[i];
     }
+    console.log(this.responseHeader);
     //fill the payload bitstream:
     //--------------------------
     this.payload = new Buffer.alloc(peerNum*6);
     var offset = 0;
     if(peerNum>0){
       DHT.forEach((element)=>{
-      storeBitPacket(this.payload, element.IP, offset, 32);
-      offset += 32;
+      ip = element.ip.split('.');
+      for(i = 0; i < ip.length; i++){
+        storeBitPacket(this.payload, Number(ip[i]), offset,8);
+        offset +=8;
+      }
       storeBitPacket(this.payload, element.port, offset, 16);
       offset += 16;
     });}

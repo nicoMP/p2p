@@ -13,8 +13,8 @@ let HOST ='127.0.0.1', PORT = 0;
 let DHTKNet = net.createServer();
 var peerID, peerName;
 var sock;
+var DHT = [{ip: "127.0.0.1", port: 4445},{ip: "127.0.0.1", port: 4434}];
 
-var DHT = [];
 //global variables
 
 DHTKNet.listen(PORT,"127.0.0.1");

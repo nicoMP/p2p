@@ -10,6 +10,7 @@ var nickNames = {},
 
 module.exports = {
   handleClientJoining: function (sock, peerID, DHT, peerName) {
+    var hTable;
     assignClientName(sock, nickNames);
     const chunks = [];
     console.log(
@@ -18,16 +19,28 @@ module.exports = {
         " is connected at timestamp: " +
         startTimestamp[sock.id]
     );
-    handleResponse(sock, DHT, peerName);
+    var hTable = handleConnection(sock, DHT, peerName);
     sock.on("close", function () {
       handleClientLeaving(sock);
     });
+//***ERROR CAN STEM FROM HERE WHEN MANIPULATING THE TABLE***
+  return hTable;//***ERROR CAN STEM FROM HERE WHEN MANIPULATING THE TABLE***
   },
 };
 
-function handleResponse(sock, DHT, peerName){
-  KADpacket.init(7,1,DHT.length, peerName, DHT)
-  sock.write(KADpacket.getBytePacket());//you were here you have to get a packet you can do that by using the kadptp
+function handleConnection(sock, DHT, peerName){
+  try
+  {KADpacket.init(7,1,DHT.length, peerName, DHT); }
+  catch(e){
+    console.log(e)
+  }
+  //you were here you have to get a packet you can do that by using the kadptp
+  try {
+    sock.write(KADpacket.getBytePacket())
+  } catch (error) {
+    console.log(error);
+  }
+  return DHT;
 }
 
 
