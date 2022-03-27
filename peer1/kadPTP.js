@@ -1,6 +1,7 @@
 //size of the response packet header:
-var HEADER_SIZE = 4;
 
+var HEADER_SIZE = 4;
+var first = true;
 //Fields that compose the header
 var version, responseType, peerNumber, timeStamp;
 
@@ -9,6 +10,7 @@ module.exports = {
   payload: "", //Bitstream of the PTP payload
 
   init: function (
+
     ver, // PTP version
     resType, // response type
     peerNum, // number of peers
@@ -16,10 +18,14 @@ module.exports = {
     DHT //hash table of server
   ) {
     //fill by default packet fields:
+    
     var version = ver;
     var byteName = stringToBytes(senderName);
     var nameLength = byteName.length;
-    HEADER_SIZE += nameLength;
+    if (first){
+      HEADER_SIZE += nameLength;
+      first = false;
+    }
     //build the header bistream:
     //--------------------------
     this.responseHeader = new Buffer.alloc(HEADER_SIZE);
@@ -37,7 +43,6 @@ module.exports = {
     for(i = 0; i<nameLength; i++){
         this.responseHeader[i+4] = byteName[i];
     }
-    console.log(this.responseHeader);
     //fill the payload bitstream:
     //--------------------------
     this.payload = new Buffer.alloc(peerNum*6);
@@ -46,11 +51,11 @@ module.exports = {
       DHT.forEach((element)=>{
       ip = element.ip.split('.');
       for(i = 0; i < ip.length; i++){
-        storeBitPacket(this.payload, Number(ip[i]), offset,8);
-        offset +=8;
+        this.payload[i+offset] = ip[i];
       }
-      storeBitPacket(this.payload, element.port, offset, 16);
-      offset += 16;
+      offset += 4;
+      this.payload[offset] = element.port;
+      offset += 2;
     });}
   },
 
@@ -64,7 +69,6 @@ module.exports = {
       packet[Hi] = this.responseHeader[Hi];
     for (var Pi = 0; Pi < this.payload.length; Pi++)
       packet[Pi + HEADER_SIZE] = this.payload[Pi];
-
     return packet;
   },
 };

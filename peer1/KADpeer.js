@@ -13,7 +13,8 @@ let HOST ='127.0.0.1', PORT = 0;
 let DHTKNet = net.createServer();
 var peerID, peerName;
 var sock;
-var DHT = [{ip: "127.0.0.1", port: 4445},{ip: "127.0.0.1", port: 4434}];
+var DHT = [];
+DHT.length = 160;
 
 //global variables
 
@@ -27,9 +28,22 @@ DHTKNet.on('listening', ()=>{
 });//gives value to the global variable 
 singleton.init();
 DHTKNet.on('connection', (sock)=>{
-    DHT = clientsHandler.handleClientJoining(sock, peerID, DHT,peerName);//sends it to given module from assignment 1 to hanfdle
+    clientsHandler.handleClientJoining(sock, peerID, DHT,peerName);//sends it to given module from assignment 1 to hanfdle
+    pushBucket(DHT,{ip: sock.remoteAddress, port: sock.remotePort-1, peerID: singleton.getPeerID(sock.remoteAddress,(sock.remotePort-1))});
+    console.log(DHT);
 })
-
+function pushBucket(table, peerInfo){
+    var distance = XORing(Hex2Bin(peerID), Hex2Bin(peerInfo.peerID))
+    var kBucket = getHash(distance);
+    if(table[kBucket] == undefined){// checks if slot is empy
+        table[kBucket] = peerInfo;//adds if empty
+    }
+    else{
+        if (parseInt(distance,2) < parseInt(XORing(Hex2Bin(peerID), Hex2Bin(table[kBucket].peerID),2))){
+            table[kBucket] = peerInfo;
+        }
+    }
+}
 if (pFlag != undefined){//what to do if there's a pflag
         switch(pFlag){
             case '-p':
@@ -81,3 +95,32 @@ process.on('uncaughtException', err => {
     DHTKNet.close();
     process.exit(1); //mandatory (as per the Node.js docs)
   })
+  function XORing(a, b){
+    let ans = "";
+        for (let i = 0; i < a.length ; i++)
+        {
+            // If the Character matches
+            if (a[i] == b[i])
+                ans += "0";
+            else
+                ans += "1";
+        }
+        return ans;
+    }
+function Hex2Bin(hex) {
+    var bin = ""
+    hex.split("").forEach(str => {
+        bin += parseInt(str, 16).toString(2).padStart(8, '0')
+    })
+    return bin
+}
+function getHash(distance){
+    let hash = 0;
+    for(i =0 ; i< distance.length; i++){
+        if (distance[i] == 0){
+            hash++;
+        }
+        else i = distance.length;
+    }
+    return hash;
+}
