@@ -21,7 +21,7 @@ module.exports = {
     var byteName = stringToBytes(senderName);
     var nameLength = byteName.length;
     console.log(bytesToString(byteName));
-    HEADER_SIZE += Math.ceil(nameLength/2);
+    HEADER_SIZE += nameLength;
     //build the header bistream:
     //--------------------------
     this.responseHeader = new Buffer.alloc(HEADER_SIZE);
@@ -36,8 +36,9 @@ module.exports = {
     // length name
     storeBitPacket(this.responseHeader, nameLength, 20,12);
     //sender name
-    storeBitPacket(this.responseHeader, byteName, 32, nameLength*4);
-
+    for(i = 0; i<nameLength; i++){
+        this.responseHeader[i+4] = byteName[i];
+    }
     //fill the payload bitstream:
     //--------------------------
     this.payload = new Buffer.alloc(peerNum*6);

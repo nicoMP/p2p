@@ -4,6 +4,7 @@ let net = require('net');
 
 let singleton = require('./Singleton.js');
 let clientsHandler = require('./ClientsHandler.js');
+let responseHandler = require('./responseHandler');
 //needed modules
 
 let pFlag = process.argv[2];
@@ -48,7 +49,8 @@ function connectTO(recAddress){
     if(validateIPaddress(ip, port)){
             sock = net.connect(port, ip);
             sock.on('data', (data)=>{
-                console.log(data.buffer);
+                console.log(data);
+                responseHandler.parseBuffer(data);
             });
     }
 }
